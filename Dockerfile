@@ -1,3 +1,4 @@
+
 FROM golang:1.11-alpine AS build
 
 ENV DISTRIBUTION_DIR /go/src/github.com/docker/distribution

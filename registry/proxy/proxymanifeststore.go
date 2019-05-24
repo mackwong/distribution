@@ -2,6 +2,11 @@ package proxy
 
 import (
 	"context"
+	"fmt"
+	"github.com/docker/distribution/manifest/manifestlist"
+	"github.com/docker/distribution/manifest/ocischema"
+	"github.com/docker/distribution/manifest/schema1"
+	"github.com/docker/distribution/manifest/schema2"
 	"time"
 
 	"github.com/docker/distribution"
@@ -87,8 +92,20 @@ func (pms proxyManifestStore) Get(ctx context.Context, dgst digest.Digest, optio
 }
 
 func (pms proxyManifestStore) Put(ctx context.Context, manifest distribution.Manifest, options ...distribution.ManifestServiceOption) (digest.Digest, error) {
-	var d digest.Digest
-	return d, distribution.ErrUnsupported
+	dcontext.GetLogger(pms.ctx).Debug("(*manifestStore).Put")
+
+	switch manifest.(type) {
+	case *schema1.SignedManifest:
+		return pms.localManifests.Put(ctx, manifest, options...)
+	case *schema2.DeserializedManifest:
+		return pms.localManifests.Put(ctx, manifest, options...)
+	case *ocischema.DeserializedManifest:
+		return pms.localManifests.Put(ctx, manifest, options...)
+	case *manifestlist.DeserializedManifestList:
+		return pms.localManifests.Put(ctx, manifest, options...)
+	}
+
+	return "", fmt.Errorf("unrecognized manifest type %T", manifest)
 }
 
 func (pms proxyManifestStore) Delete(ctx context.Context, dgst digest.Digest) error {

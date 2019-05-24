@@ -156,14 +156,16 @@ func (pr *proxyingRegistry) Repository(ctx context.Context, name reference.Named
 		return nil, err
 	}
 
+	blobStore := &proxyBlobStore{
+		localStore:     localRepo.Blobs(ctx),
+		remoteStore:    remoteRepo.Blobs(ctx),
+		scheduler:      pr.scheduler,
+		repositoryName: name,
+		authChallenger: pr.authChallenger,
+	}
+
 	return &proxiedRepository{
-		blobStore: &proxyBlobStore{
-			localStore:     localRepo.Blobs(ctx),
-			remoteStore:    remoteRepo.Blobs(ctx),
-			scheduler:      pr.scheduler,
-			repositoryName: name,
-			authChallenger: pr.authChallenger,
-		},
+		blobStore: blobStore,
 		manifests: &proxyManifestStore{
 			repositoryName:  name,
 			localManifests:  localManifests, // Options?
