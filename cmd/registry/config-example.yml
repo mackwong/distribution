@@ -6,15 +6,15 @@ storage:
   cache:
     blobdescriptor: inmemory
   filesystem:
-    rootdirectory: /tmp/registry
+    rootdirectory: /var/lib/registry
 http:
   addr: :5000
   headers:
     X-Content-Type-Options: [nosniff]
-proxy:
-  remoteurl: https://hub.guazi-cloud.com
-  username: admin
-  password: Harbor12345
+auth:
+  htpasswd:
+    realm: basic-realm
+    path: /etc/registry
 health:
   storagedriver:
     enabled: true
