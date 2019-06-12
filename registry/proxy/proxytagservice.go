@@ -2,8 +2,9 @@ package proxy
 
 import (
 	"context"
-
 	"github.com/docker/distribution"
+	"github.com/docker/distribution/registry/api/errcode"
+	v2 "github.com/docker/distribution/registry/api/v2"
 )
 
 // proxyTagService supports local and remote lookup of tags.
@@ -29,6 +30,15 @@ func (pt proxyTagService) Get(ctx context.Context, tag string) (distribution.Des
 	}
 	desc, err = pt.remoteTags.Get(ctx, tag)
 	if err != nil {
+		if errs, ok := err.(errcode.Errors); ok {
+			for _, e := range errs {
+				if err, ok := e.(errcode.Error); ok {
+					if v2.ErrorCodeManifestUnknown == err.ErrorCode() {
+						return distribution.Descriptor{}, distribution.ErrTagUnknown{tag}
+					}
+				}
+			}
+		}
 		return distribution.Descriptor{}, err
 	}
 	err = pt.localTags.Tag(ctx, tag, desc)
